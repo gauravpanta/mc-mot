@@ -1,6 +1,7 @@
-import torch
 import numpy as np
 import cv2
+import torch
+from ultralytics import YOLO
 
 import utilities
 
@@ -43,20 +44,16 @@ def main(opts):
 
     assert cv2.imwrite("./img_with_matches.png", img_with_matches)
 
-    # Loading yolov5 model
-    detector = torch.hub.load("ultralytics/yolov5", "yolov5m")
-
-    # NOTE: Avoid detecting multiple objects in the same box
-    detector.agnostic = True
-    detector.classes = [0]
+    WEIGHTS_URL = "models/object_segmentation_best.pt"
+    model = YOLO(WEIGHTS_URL)
 
     num_frames1 = video1.get(cv2.CAP_PROP_FRAME_COUNT)
     num_frames2 = video2.get(cv2.CAP_PROP_FRAME_COUNT)
     num_frames = min(num_frames2, num_frames1)
-    num_frames = int(num_frames)
+    num_frames = abs(int(num_frames))
 
     # NOTE: Second video is 17 frames behind the first video
-    video2.set(cv2.CAP_PROP_POS_FRAMES, 17)
+    # video2.set(cv2.CAP_PROP_POS_FRAMES, 17)
 
     for idx in range(num_frames):
         # Get frames
@@ -64,10 +61,10 @@ def main(opts):
         frame2 = video2.read()[1]
 
         # Run object detection
-        anno = detector([frame1, frame2])
+        anno = model.predict([frame1, frame2], device=torch.device("cuda"))
 
-        pred1 = anno.xyxy[0].cpu().numpy()[:, :4]
-        pred2 = anno.xyxy[1].cpu().numpy()[:, :4]
+        pred1 = anno[0].boxes.xyxy.cpu().numpy()[:, :4]
+        pred2 = anno[1].boxes.xyxy.cpu().numpy()[:, :4]
 
         pred2_ = utilities.apply_homography_xyxy(pred1, cam4_H_cam1)
 

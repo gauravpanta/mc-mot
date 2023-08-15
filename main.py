@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import cv2
+from ultralytics import YOLO
 
 import sort
 import utilities
@@ -20,12 +21,8 @@ def main(opts):
     homographies.append(np.eye(3))
     homographies.append(cam1_H_cam4)
 
-    detector = torch.hub.load("ultralytics/yolov5", "yolov5m")
-    detector.agnostic = True
-
-    # Class 0 is Person
-    detector.classes = [0]
-    detector.conf = opts.conf
+    WEIGHTS_URL = "models/object_segmentation_best.pt"
+    model = YOLO(WEIGHTS_URL)
 
     trackers = [
         sort.Sort(
@@ -33,15 +30,15 @@ def main(opts):
         )
         for _ in range(2)
     ]
-    global_tracker = homography_tracker.MultiCameraTracker(homographies, iou_thres=0.20)
+    global_tracker = homography_tracker.MultiCameraTracker(homographies, iou_thres=0.10)
 
     num_frames1 = video1.get(cv2.CAP_PROP_FRAME_COUNT)
     num_frames2 = video2.get(cv2.CAP_PROP_FRAME_COUNT)
     num_frames = min(num_frames2, num_frames1)
-    num_frames = int(num_frames)
+    num_frames = abs(int(num_frames))
 
-    # NOTE: Second video 'cam4.mp4' is 17 frames behind the first video 'cam1.mp4'
-    video2.set(cv2.CAP_PROP_POS_FRAMES, 17)
+    # # NOTE: Second video 'cam4.mp4' is 17 frames behind the first video 'cam1.mp4'
+    # video2.set(cv2.CAP_PROP_POS_FRAMES, 17)
 
     video = None
     for idx in range(num_frames):
@@ -51,13 +48,12 @@ def main(opts):
 
         # NOTE: YoloV5 expects the images to be RGB instead of BGR
         frames = [frame1[:, :, ::-1], frame2[:, :, ::-1]]
-
-        anno = detector(frames)
+        anno = model.predict(frames, device=torch.device("cuda"))
 
         dets, tracks = [], []
         for i in range(len(anno)):
             # Sort Tracker requires (x1, y1, x2, y2) bounding box shape
-            det = anno.xyxy[i].cpu().numpy()
+            det = anno[i].boxes.xyxy.cpu().numpy()
             det[:, :4] = np.int0(det[:, :4])
             dets.append(det)
 
@@ -73,7 +69,7 @@ def main(opts):
                 tracks[i],
                 global_ids[i],
                 i,
-                classes=detector.names,
+                classes=None,
             )
 
         vis = np.hstack(frames)

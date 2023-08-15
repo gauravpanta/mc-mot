@@ -31,7 +31,7 @@ def apply_homography_xyxy(xyxy, H):
         x2 = x2 / s2
         y2 = y2 / s2
 
-        xyxy_[idx] = [x1, y1, x2, y2]
+        xyxy_[idx] = [x1[0], y1[0], x2[0], y2[0]]
 
     return xyxy_
 
