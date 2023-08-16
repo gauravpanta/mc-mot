@@ -13,7 +13,7 @@ def main(opts):
     assert video2.isOpened(), f"Could not open video2 source {opts.video2}"
 
     # 1000 was choosen arbitrarily
-    feat_detector = cv2.SIFT_create(1000)
+    feat_detector = cv2.AKAZE_create()
 
     _, frame1 = video1.read()
     _, frame2 = video2.read()

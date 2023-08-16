@@ -30,7 +30,7 @@ def main(opts):
         )
         for _ in range(2)
     ]
-    global_tracker = homography_tracker.MultiCameraTracker(homographies, iou_thres=0.10)
+    global_tracker = homography_tracker.MultiCameraTracker(homographies, iou_thres=0.00)
 
     num_frames1 = video1.get(cv2.CAP_PROP_FRAME_COUNT)
     num_frames2 = video2.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -43,9 +43,13 @@ def main(opts):
     video = None
     for idx in range(num_frames):
         # Get frames
+
+
         frame1 = video1.read()[1]
         frame2 = video2.read()[1]
 
+        if idx % int(15*2) != 0:
+            continue
         # NOTE: YoloV5 expects the images to be RGB instead of BGR
         frames = [frame1[:, :, ::-1], frame2[:, :, ::-1]]
         anno = model.predict(frames, device=torch.device("cuda"))
