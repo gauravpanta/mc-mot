@@ -116,7 +116,7 @@ def draw_tracks(image, tracks, ids_dict, src, classes=None):
         else:
             text = f"{classes[labels[i]]} {id}"
         vis = cv2.putText(
-            vis, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, thickness=2
+            vis, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 2, color, thickness=2
         )
 
     return vis
