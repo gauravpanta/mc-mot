@@ -85,3 +85,8 @@ If you run on a CPU, try to change the Yolo model to the smaller one.
 
 
 # CALIBRATE CAM 2 and Cam 4
+--video1 rtsp://root:elm6867@10.10.220.187/axis-media/media.amp?camera=2 --video2 rtsp://root:elm6867@10.10.220.187/axis-media/media.amp?camera=4 --homography-pth cam2_cam4
+
+# CALIBRATE CAM 4 and CAM 1
+--video1 rtsp://root:elm6867@10.10.220.187/axis-media/media.amp?camera=4 --video2 rtsp://root:elm6867@10.10.220.187/axis-media/media.amp?camera=1 --homography-pth cam4_cam1
+
